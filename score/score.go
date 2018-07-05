@@ -1,6 +1,9 @@
 package score
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 type S struct {
 	Hits        int
@@ -37,4 +40,13 @@ func (s *S) String() string {
 		}
 	}
 	return str
+}
+
+func (s *S) Save(filename string) {
+	f, e := os.Create(filename)
+	defer f.Close()
+	if e != nil {
+		panic(e)
+	}
+	fmt.Fprintln(f, s.String())
 }

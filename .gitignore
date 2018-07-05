@@ -1,5 +1,11 @@
+# Benchmarks output
+benchmarks
+*.put
+
+# Vim
+*.vim
+
 # GoSPN cache.
-Session.vim
 .cache/
 *.data
 
