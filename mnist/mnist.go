@@ -1,4 +1,4 @@
-package digits
+package mnist
 
 import (
 	"errors"
@@ -18,16 +18,21 @@ import (
 )
 
 var (
-	rawDataset spn.Dataset
-	scope      map[int]*learn.Variable
-	labels     []int
-	classVar   *learn.Variable
+	rawTest     spn.Dataset
+	test        spn.Dataset
+	testLabels  []int
+	rawTrain    spn.Dataset
+	train       spn.Dataset
+	trainLabels []int
+	scope       map[int]*learn.Variable
+	classVar    *learn.Variable
 )
 
 func init() {
-	fmt.Println("Downloading DigitsX dataset...")
-	scope, rawDataset = data.DigitsX()
-	_, _, classVar, labels = data.ExtractLabels(scope, rawDataset)
+	fmt.Println("Downloading MNIST-3Bits-2000 dataset...")
+	scope, rawTest, rawTrain = data.MNIST3Bits2000()
+	_, test, classVar, testLabels = data.ExtractLabels(scope, rawTest)
+	_, train, classVar, trainLabels = data.ExtractLabels(scope, rawTrain)
 }
 
 func createStructure(A params.Algorithm, T spn.Dataset, Sc map[int]*learn.Variable, L []int, t string) spn.SPN {
@@ -48,7 +53,7 @@ func createStructure(A params.Algorithm, T spn.Dataset, Sc map[int]*learn.Variab
 				mu.Unlock()
 				fmt.Printf("Creating structure for digit %d...\n", id)
 				S := poon.Structure(K[id], P.SumsPerRegion, P.GaussPerPixel, P.Resolution)
-				parameters.Bind(S, P.P)
+				//parameters.Bind(S, P.P)
 				//fmt.Println("Generative learning...")
 				//learn.Generative(S, K[id])
 				pi := spn.NewProduct()
@@ -76,7 +81,7 @@ func createStructure(A params.Algorithm, T spn.Dataset, Sc map[int]*learn.Variab
 				}
 				mu.Unlock()
 				fmt.Printf("Creating structure for digit %d...\n", id)
-				S := dennis.Structure(K[id], lsc, P.ClustersPerDecomp, P.SumsPerRegion, P.GaussPerPixel,
+				S := dennis.Structure(K[id], Sc, P.ClustersPerDecomp, P.SumsPerRegion, P.GaussPerPixel,
 					P.SimilarityThreshold)
 				parameters.Bind(S, P.P)
 				fmt.Println("Generative learning...")
@@ -97,14 +102,10 @@ func createStructure(A params.Algorithm, T spn.Dataset, Sc map[int]*learn.Variab
 	}
 }
 
-func Classify(A params.Algorithm, p float64) (*score.S, error) {
-	if p == 0.0 || p == 1.0 {
-		return nil, errors.New("Partition value p can't be 0 or 1!")
-	}
-	sys.Width, sys.Height = 20, 30
+func Classify(A params.Algorithm) (*score.S, error) {
+	sys.Width, sys.Height = 28, 28
 	sys.Max = 8
 
-	D, L := data.PartitionByLabels(rawDataset, labels, classVar.Categories, []float64{p, 1.0 - p})
 	score := score.NewScore()
 	st := spn.NewStorer()
 	tk := st.NewTicket()
@@ -112,15 +113,54 @@ func Classify(A params.Algorithm, p float64) (*score.S, error) {
 	var S spn.SPN
 	if t == "gens" {
 		P := A.(*params.Gens)
-		S = gens.Learn(scope, D[0], P.Clusters, P.PValue, P.Epsilon, P.MinPoints)
+		S = gens.Learn(scope, rawTrain, P.Clusters, P.PValue, P.Epsilon, P.MinPoints)
 	} else {
-		S = createStructure(A, D[0], scope, L[0], t)
+		S = createStructure(A, rawTrain, scope, trainLabels, t)
 	}
-	for i, I := range D[1] {
+	fmt.Println("Evaluating scores...")
+	n := len(test) / 10
+	for i, I := range test {
+		if i > 0 && i%n == 0 {
+			fmt.Printf("... %d%% ...\n", int(100.0*(float64(i)/float64(len(test)))))
+		}
 		j := classVar.Varid
 		delete(I, j)
 		_, _, M := spn.StoreMAP(S, I, tk, st)
-		score.Register(M[j], L[1][i])
+		score.Register(M[j], testLabels[i])
+		st.Reset(tk)
+	}
+	return score, nil
+}
+
+func ClassifyIn(A params.Algorithm, p float64) (*score.S, error) {
+	sys.Width, sys.Height = 28, 28
+	sys.Max = 8
+
+	allTrain, allLabels := data.Join(rawTrain, rawTest, trainLabels, testLabels)
+	D, L := data.PartitionByLabels(allTrain, allLabels, classVar.Categories, []float64{p, 1.0 - p})
+	T, R := D[0], D[1]
+	tL, rL := L[0], L[1]
+	score := score.NewScore()
+	st := spn.NewStorer()
+	tk := st.NewTicket()
+	t := A.Name()
+	var S spn.SPN
+	if t == "gens" {
+		P := A.(*params.Gens)
+		S = gens.Learn(scope, R, P.Clusters, P.PValue, P.Epsilon, P.MinPoints)
+	} else {
+		S = createStructure(A, R, scope, rL, t)
+	}
+	fmt.Println("Evaluating scores...")
+	n := len(T) / 10
+	for i, I := range T {
+		if i > 0 && i%n == 0 {
+			fmt.Printf("... %d%% ...\n", int(100.0*(float64(i)/float64(len(T)))))
+		}
+		j := classVar.Varid
+		delete(I, j)
+		_, _, M := spn.StoreMAP(S, I, tk, st)
+		score.Register(M[j], tL[i])
 		st.Reset(tk)
 	}
 	return score, nil
