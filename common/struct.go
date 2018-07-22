@@ -34,7 +34,7 @@ func ClassStructure(A params.Algorithm, T spn.Dataset, Sc map[int]*learn.Variabl
 					lsc[k] = v
 				}
 				mu.Unlock()
-				fmt.Printf("Creating structure for digit %d...\n", id)
+				fmt.Printf("Creating structure for class %d...\n", id)
 				S := dennis.Structure(K[id], Sc, P.ClustersPerDecomp, P.SumsPerRegion, P.GaussPerPixel,
 					P.SimilarityThreshold)
 				parameters.Bind(S, P.P)
@@ -46,7 +46,7 @@ func ClassStructure(A params.Algorithm, T spn.Dataset, Sc map[int]*learn.Variabl
 				mu.Lock()
 				root.AddChildW(pi, 1.0/float64(c))
 				mu.Unlock()
-				fmt.Printf("Created structure for digit %d.\n", id)
+				fmt.Printf("Created structure for class %d.\n", id)
 			}, i)
 		}
 		Q.Wait()
@@ -80,6 +80,31 @@ func ClassStructure(A params.Algorithm, T spn.Dataset, Sc map[int]*learn.Variabl
 		}
 		Q.Wait()
 		return root
+	} else {
+		panic(errors.New(fmt.Sprintf("Unrecognized algorithm: %s", t)))
+	}
+}
+
+func CmplStructure(A params.Algorithm, T spn.Dataset, Sc map[int]*learn.Variable, classVar *learn.Variable) spn.SPN {
+	if t := A.Name(); t == "gens" {
+		P := A.(*params.Gens)
+		return gens.Learn(Sc, T, P.Clusters, P.PValue, P.Epsilon, P.MinPoints)
+	} else if t == "dennis" {
+		P := A.(*params.Dennis)
+		S := dennis.Structure(T, Sc, P.ClustersPerDecomp, P.SumsPerRegion, P.GaussPerPixel,
+			P.SimilarityThreshold)
+		parameters.Bind(S, P.P)
+		fmt.Println("Generative learning...")
+		learn.Generative(S, T)
+		return S
+	} else if t == "poon" {
+		P := A.(*params.Poon)
+		R := data.SubtractVariable(T, classVar)
+		S := poon.Structure(R, P.SumsPerRegion, P.GaussPerPixel, P.Resolution)
+		parameters.Bind(S, P.P)
+		fmt.Println("Generative learning...")
+		learn.Generative(S, R)
+		return S
 	} else {
 		panic(errors.New(fmt.Sprintf("Unrecognized algorithm: %s", t)))
 	}
