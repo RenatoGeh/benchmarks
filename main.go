@@ -52,10 +52,22 @@ func testCmplDigits(A params.Algorithm) {
 }
 
 func testCmplOlivetti(A params.Algorithm) {
-	//datasets.Olivetti.CompletePerLabel(A)
-	if err := datasets.Olivetti.Complete(A, 0.7); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+	datasets.Olivetti.CompletePerLabel(A)
+	//if err := datasets.Olivetti.Complete(A, 0.7); err != nil {
+	//fmt.Println(err)
+	//os.Exit(1)
+	//}
+}
+
+func testCaltech(A params.Algorithm) {
+	for p := 0.1; p < 0.95; p += 0.1 {
+		score, err := datasets.Caltech.Classify(A, p)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		fmt.Printf("At p=%.1f:\n", p)
+		fmt.Println(score)
 	}
 }
 
@@ -65,8 +77,9 @@ func main() {
 	//A := params.NewDennis(P, 4, 4, 1, 0.95)
 	//A := params.NewPoon(P, 4, 4, 2)
 	A := params.NewGens(P, -1, 0.01, 4, 4)
+	testCaltech(A)
 	//testCmplDigits(A)
 	//testDigits(A)
-	testCmplOlivetti(A)
+	//testCmplOlivetti(A)
 	//testMNIST(A)
 }

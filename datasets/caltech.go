@@ -7,12 +7,12 @@ import (
 )
 
 var (
-	Olivetti Data
+	Caltech Data
 )
 
 func init() {
-	fmt.Println("Downloading Olivetti dataset...")
-	scope, rawDataset := data.Olivetti3Bit()
+	fmt.Println("Downloading Caltech-101 dataset...")
+	scope, rawDataset := data.Caltech4Bit()
 	_, _, classVar, labels := data.ExtractLabels(scope, rawDataset)
-	Olivetti = &dataProto{rawDataset, scope, labels, classVar, 46, 56, 8, score.NewScore()}
+	Caltech = &dataProto{rawDataset, scope, labels, classVar, 150, 65, 16, score.NewScore()}
 }
