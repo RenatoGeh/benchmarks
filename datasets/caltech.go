@@ -12,7 +12,7 @@ var (
 
 func init() {
 	fmt.Println("Downloading Caltech-101 dataset...")
-	scope, rawDataset := data.Caltech4Bit()
+	scope, rawDataset := data.Caltech3Bit()
 	_, _, classVar, labels := data.ExtractLabels(scope, rawDataset)
 	Caltech = &dataProto{rawDataset, scope, labels, classVar, 150, 65, 16, score.NewScore()}
 }

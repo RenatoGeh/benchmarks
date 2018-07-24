@@ -10,6 +10,11 @@ import (
 	"github.com/RenatoGeh/gospn/score"
 	"github.com/RenatoGeh/gospn/spn"
 	"github.com/RenatoGeh/gospn/sys"
+	"sync"
+)
+
+var (
+	mu = &sync.Mutex{}
 )
 
 type dataProto struct {
@@ -31,9 +36,11 @@ func (d *dataProto) Classify(A params.Algorithm, p float64) (*score.S, error) {
 	if p == 0.0 || p == 1.0 {
 		return nil, errors.New("Partition value p can't be 0 or 1!")
 	}
+	mu.Lock()
 	sys.Width, sys.Height = d.w, d.h
 	sys.Max = d.m
 	D, L := data.PartitionByLabels(d.rawDataset, d.labels, d.classVar.Categories, []float64{p, 1.0 - p})
+	mu.Unlock()
 	fmt.Println("Creating structure...")
 	S := common.ClassStructure(A, D[0], d.scope, L[0], d.classVar)
 	fmt.Println("Structure created.")
