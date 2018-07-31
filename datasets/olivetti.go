@@ -12,7 +12,7 @@ var (
 
 func init() {
 	fmt.Println("Downloading Olivetti dataset...")
-	scope, rawDataset := data.Olivetti3Bit()
+	scope, rawDataset := data.OlivettiPadded()
 	_, _, classVar, labels := data.ExtractLabels(scope, rawDataset)
-	Olivetti = &dataProto{rawDataset, scope, labels, classVar, 46, 56, 8, score.NewScore()}
+	Olivetti = &dataProto{rawDataset, scope, labels, classVar, 48, 56, 8, score.NewScore()}
 }

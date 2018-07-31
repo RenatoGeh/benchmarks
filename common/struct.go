@@ -12,6 +12,7 @@ import (
 	"github.com/RenatoGeh/gospn/learn/parameters"
 	"github.com/RenatoGeh/gospn/learn/poon"
 	"github.com/RenatoGeh/gospn/spn"
+	"github.com/RenatoGeh/gospn/sys"
 	"sync"
 )
 
@@ -27,6 +28,9 @@ func ClassStructure(A params.Algorithm, T spn.Dataset, Sc map[int]*learn.Variabl
 		K := data.Split(T, c, L)
 		root := spn.NewSum()
 		for i := 0; i < c; i++ {
+			if len(K[i]) <= 0 {
+				continue
+			}
 			Q.Run(func(id int) {
 				mu.Lock()
 				lsc := make(map[int]*learn.Variable)
@@ -34,11 +38,11 @@ func ClassStructure(A params.Algorithm, T spn.Dataset, Sc map[int]*learn.Variabl
 					lsc[k] = v
 				}
 				mu.Unlock()
-				fmt.Printf("Creating structure for class %d...\n", id)
+				sys.Printf("Creating structure for class %d...\n", id)
 				S := dennis.Structure(K[id], Sc, P.ClustersPerDecomp, P.SumsPerRegion, P.GaussPerPixel,
 					P.SimilarityThreshold)
 				parameters.Bind(S, P.P)
-				fmt.Println("Generative learning...")
+				sys.Println("Generative learning...")
 				learn.Generative(S, K[id])
 				pi := spn.NewProduct()
 				pi.AddChild(S)
@@ -46,7 +50,7 @@ func ClassStructure(A params.Algorithm, T spn.Dataset, Sc map[int]*learn.Variabl
 				mu.Lock()
 				root.AddChildW(pi, 1.0/float64(c))
 				mu.Unlock()
-				fmt.Printf("Created structure for class %d.\n", id)
+				sys.Printf("Created structure for class %d.\n", id)
 			}, i)
 		}
 		Q.Wait()
@@ -57,6 +61,9 @@ func ClassStructure(A params.Algorithm, T spn.Dataset, Sc map[int]*learn.Variabl
 		K := data.Split(T, c, L)
 		root := spn.NewSum()
 		for i := 0; i < c; i++ {
+			if len(K[i]) <= 0 {
+				continue
+			}
 			Q.Run(func(id int) {
 				mu.Lock()
 				lsc := make(map[int]*learn.Variable)
