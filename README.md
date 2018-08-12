@@ -48,6 +48,8 @@ is when we simply take the two original training and test sets.
 
 ### Classification
 
+All classification accuracy results are in percentage of hits.
+
 #### DigitsX
 
 Partition `p` | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9
@@ -71,7 +73,7 @@ Gens-Domingos | 2.50| 2.50|93.92|91.25|95.50|98.75|81.93|81.59|100.00
 
 #### MNIST
 
- |Dennis-Ventura|Gens-Domingos
--|--------------|-------------
+Classifications|Dennis-Ventura|Gens-Domingos
+---------------|--------------|-------------
 In-sample|77.85|81.55
 Out-sample|69.90|76.90
