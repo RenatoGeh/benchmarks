@@ -26,7 +26,7 @@ var (
 
 func init() {
 	fmt.Println("Downloading MNIST-3Bits-2000 dataset...")
-	scope, rawTest, rawTrain := data.MNIST3Bits2000()
+	scope, rawTest, rawTrain := data.MNIST3Bits1000()
 	_, test, classVar, testLabels := data.ExtractLabels(scope, rawTest)
 	_, train, classVar, trainLabels := data.ExtractLabels(scope, rawTrain)
 	allTrain, allLabels := data.Join(rawTrain, rawTest, trainLabels, testLabels)

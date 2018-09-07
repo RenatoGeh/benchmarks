@@ -35,11 +35,13 @@ func ClassStructure(A params.Algorithm, T spn.Dataset, Sc map[int]*learn.Variabl
 				mu.Lock()
 				lsc := make(map[int]*learn.Variable)
 				for k, v := range Sc {
-					lsc[k] = v
+					if k != classVar.Varid {
+						lsc[k] = v
+					}
 				}
 				mu.Unlock()
 				sys.Printf("Creating structure for class %d...\n", id)
-				S := dennis.Structure(K[id], Sc, P.ClustersPerDecomp, P.SumsPerRegion, P.GaussPerPixel,
+				S := dennis.Structure(K[id], lsc, P.ClustersPerDecomp, P.SumsPerRegion, P.GaussPerPixel,
 					P.SimilarityThreshold)
 				parameters.Bind(S, P.P)
 				sys.Println("Generative learning...")

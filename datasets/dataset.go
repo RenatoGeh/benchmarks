@@ -46,12 +46,19 @@ func (d *dataProto) Classify(A params.Algorithm, p float64) (*score.S, error) {
 	sys.Max = d.m
 	D, L := data.PartitionByLabels(d.rawDataset, d.labels, d.classVar.Categories, []float64{p, 1.0 - p})
 	mu.Unlock()
-	sys.Println("Creating structure...")
+	fmt.Println("Creating structure...")
 	S := common.ClassStructure(A, D[0], d.scope, L[0], d.classVar)
-	sys.Println("Structure created.")
-	d.scr.Clear()
-	d.scr.Evaluate(D[1], L[1], S, d.classVar)
-	return d.scr, nil
+	fmt.Println("Structure created.")
+	//d.scr.Clear()
+	score := score.NewScore()
+	fmt.Println("Evaluating...")
+	score.Evaluate(D[1], L[1], S, d.classVar)
+	//if p >= 0.9 {
+	//score.EvaluatePosteriorConc(D[1], L[1], S, d.classVar, -1)
+	//} else {
+	//score.EvaluatePosterior(D[1], L[1], S, d.classVar)
+	//}
+	return score, nil
 }
 
 func (d *dataProto) Complete(A params.Algorithm, p float64) error {
